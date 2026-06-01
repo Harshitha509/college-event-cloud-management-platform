@@ -34,10 +34,13 @@ window.renderLogin = async function(appDiv) {
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
+        const emailVal = document.getElementById('email').value;
+        const passwordVal = document.getElementById('password').value;
+
         try {
             const data = await apiCall('/auth/login', 'POST', {
-                email: form.email.value,
-                password: form.password.value
+                email: emailVal,
+                password: passwordVal
             });
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
@@ -156,17 +159,17 @@ window.renderSignup = async function(appDiv) {
 
         if (score <= 2) {
             strengthBar.style.width = '33%';
-            strengthBar.style.background = '#ef4444'; // Red
+            strengthBar.style.background = '#ef4444';
             strengthText.innerText = 'Strength: Weak';
             strengthText.style.color = '#ef4444';
         } else if (score <= 4) {
             strengthBar.style.width = '66%';
-            strengthBar.style.background = '#f59e0b'; // Amber
+            strengthBar.style.background = '#f59e0b';
             strengthText.innerText = 'Strength: Moderate';
             strengthText.style.color = '#f59e0b';
         } else {
             strengthBar.style.width = '100%';
-            strengthBar.style.background = '#10b981'; // Green
+            strengthBar.style.background = '#10b981';
             strengthText.innerText = 'Strength: Excellent (Strict)';
             strengthText.style.color = '#10b981';
         }
@@ -219,12 +222,17 @@ window.renderSignup = async function(appDiv) {
             return;
         }
 
+        const nameVal = document.getElementById('name').value;
+        const emailVal = document.getElementById('email').value;
+        const passwordVal = document.getElementById('password').value;
+        const roleVal = document.getElementById('role').value;
+
         try {
             const data = await apiCall('/auth/register', 'POST', {
-                name: form.name.value,
-                email: form.email.value,
-                password: form.password.value,
-                role: form.role.value
+                name: nameVal,
+                email: emailVal,
+                password: passwordVal,
+                role: roleVal
             });
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
@@ -259,7 +267,7 @@ window.renderForgotPassword = async function(appDiv) {
     document.getElementById('forgotForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
-        const emailVal = form.email.value;
+        const emailVal = document.getElementById('email').value;
         try {
             await apiCall('/auth/forgot-password', 'POST', { email: emailVal });
             showToast('Verification code sent to your email.');
@@ -432,11 +440,15 @@ window.renderResetPassword = async function(appDiv) {
             return;
         }
 
+        const emailVal = document.getElementById('email').value;
+        const otpVal = document.getElementById('otp').value;
+        const passwordVal = document.getElementById('password').value;
+
         try {
             const data = await apiCall('/auth/reset-password', 'POST', {
-                email: form.email.value,
-                otp: form.otp.value,
-                newPassword: form.password.value
+                email: emailVal,
+                otp: otpVal,
+                newPassword: passwordVal
             });
             showToast(data.msg);
             window.location.hash = '#/login';
