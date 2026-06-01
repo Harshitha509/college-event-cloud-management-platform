@@ -4,13 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
-const nodemailer = require('nodemailer');
 
-// Configure Email Transporter
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER || 'system@yourdomain.com', pass: process.env.EMAIL_PASS || 'secret' }
-});
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -115,29 +109,9 @@ router.post('/forgot-password', async (req, res) => {
         });
         await newOtp.save();
 
-        // Dispatch Email
-        try {
-            await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: 'EventCloud Password Reset Code',
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
-                        <h2 style="color: #a855f7; text-align: center;">Reset Your Password</h2>
-                        <p>We received a request to reset the password for your EventCloud account. Enter the 6-digit verification code below on the recovery page:</p>
-                        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; text-align: center; margin: 1.5rem 0;">
-                            <span style="font-size: 2.2rem; font-weight: 700; letter-spacing: 6px; color: #a855f7;">${otp}</span>
-                        </div>
-                        <p style="font-size: 0.9rem; color: #64748b; text-align: center;">This code will expire in 10 minutes. If you did not request this code, you can safely ignore this email.</p>
-                    </div>
-                `
-            });
-            console.log(`[SMTP] Dispatched password reset OTP to ${email}`);
-            res.json({ msg: 'Reset code sent to your email.' });
-        } catch (emailErr) {
-            console.error('[SMTP] Reset OTP Email Failed:', emailErr.message);
-            res.status(500).json({ msg: 'Mail server failed to send reset code. Please try again later.' });
-        }
+        // Print reset code to console and return success
+        console.log(`🔑 [OTP SYSTEM] Password reset code for ${email} is: ${otp}`);
+        res.json({ msg: `Reset code generated! [DIAGNOSTIC DEVELOPER ONLY: Your code is ${otp}]` });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

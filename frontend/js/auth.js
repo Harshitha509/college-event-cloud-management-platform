@@ -269,8 +269,8 @@ window.renderForgotPassword = async function(appDiv) {
         const form = e.target;
         const emailVal = document.getElementById('email').value;
         try {
-            await apiCall('/auth/forgot-password', 'POST', { email: emailVal });
-            showToast('Verification code sent to your email.');
+            const data = await apiCall('/auth/forgot-password', 'POST', { email: emailVal });
+            showToast(data.msg || 'Verification code sent to your email.');
             window.location.hash = `#/reset-password?email=${encodeURIComponent(emailVal)}`;
         } catch (err) {
             showToast(err.message, 'error');

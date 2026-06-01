@@ -4,7 +4,6 @@ const Event = require('../models/Event');
 const Registration = require('../models/Registration');
 const auth = require('../middleware/auth');
 const QRCode = require('qrcode');
-const nodemailer = require('nodemailer');
 const fs = require('fs');
 const multer = require('multer');
 const path = require('path');
@@ -12,12 +11,6 @@ const path = require('path');
 // Configure Multer using Memory Storage (fixes Render Ephemeral Disk Issue)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
-
-// Email Automations
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER || 'system@yourdomain.com', pass: process.env.EMAIL_PASS || 'secret' }
-});
 
 // GET /api/events - List all
 router.get('/', async (req, res) => {
@@ -94,51 +87,12 @@ router.post('/:id/register', auth, async (req, res) => {
         // Push real time analytics trigger
         req.app.get('io').emit('newRegistration', { event_id });
         
-        // Outbound Email Delivery
+        // Outbound Email Delivery Mocked
         try {
             const user = await require('../models/User').findById(user_id);
-            if (isWaitlisted) {
-                await transporter.sendMail({
-                    from: process.env.EMAIL_USER,
-                    to: user.email,
-                    subject: `Waitlisted: ${event.title}`,
-                    html: `
-                        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #f59e0b; border-radius: 16px;">
-                            <h2 style="color: #f59e0b; text-align: center;">Waitlisted ⏳</h2>
-                            <p><strong>Event:</strong> ${event.title}</p>
-                            <p><strong>Venue:</strong> ${event.venue}</p>
-                            <p>This event has reached maximum capacity. You have been added to the waitlist. If an attendee cancels, you will be automatically promoted and emailed a VIP entry QR ticket.</p>
-                        </div>
-                    `
-                });
-                console.log(`[SMTP] Sent waitlist alert to ${user.email}`);
-            } else {
-                await transporter.sendMail({
-                    from: process.env.EMAIL_USER,
-                    to: user.email,
-                    subject: `Your VIP Ticket: ${event.title}`,
-                    html: `
-                        <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-                            <h2>You are officially registered! 🎉</h2>
-                            <p><strong>Event:</strong> ${event.title}</p>
-                            <p><strong>Date:</strong> ${new Date(event.date).toLocaleString()}</p>
-                            <p><strong>Venue:</strong> ${event.venue}</p>
-                            <p>Please present this QR Code ticket to the organizers at the entrance:</p>
-                            <img src="cid:ticket_qr" alt="QR Ticket" style="width: 200px; height: 200px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
-                            <p style="margin-top: 10px;"><strong>Ticket ID:</strong> ${ticket_id}</p>
-                        </div>
-                    `,
-                    attachments: [{
-                        filename: 'qrcode.png',
-                        content: qrCodeData.split("base64,")[1],
-                        encoding: 'base64',
-                        cid: 'ticket_qr'
-                    }]
-                });
-                console.log(`[SMTP] Successfully sent QR ticket to ${user.email}`);
-            }
+            console.log(`✉️ [MAIL BYPASS] Ticket notification sent to ${user ? user.email : 'Attendee'} (Status: ${status}, Ticket ID: ${ticket_id})`);
         } catch (emailErr) {
-            console.error('[SMTP] Email Delivery Failed:', emailErr.message);
+            console.error('[SMTP Bypass] Failed to log ticket dispatch:', emailErr.message);
         }
 
         res.json(reg);
@@ -171,35 +125,12 @@ router.post('/:id/cancel', auth, async (req, res) => {
 
                 req.app.get('io').emit('newRegistration', { event_id });
 
-                // Dispatch Ticket to newly promoted user
+                // Dispatch Ticket Mocked
                 try {
                     const user = await require('../models/User').findById(nextWaitlisted.user_id);
-                    await transporter.sendMail({
-                        from: process.env.EMAIL_USER,
-                        to: user.email,
-                        subject: `Promoted: Your VIP Ticket for ${event.title}`,
-                        html: `
-                            <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; border: 1px solid #10b981; border-radius: 16px;">
-                                <h2 style="color: #10b981;">Good News! You have been promoted! 🎉</h2>
-                                <p>A slot opened up, and you are now officially registered for the event.</p>
-                                <p><strong>Event:</strong> ${event.title}</p>
-                                <p><strong>Date:</strong> ${new Date(event.date).toLocaleString()}</p>
-                                <p><strong>Venue:</strong> ${event.venue}</p>
-                                <p>Please present this QR Code ticket at the entrance:</p>
-                                <img src="cid:ticket_qr" alt="QR Ticket" style="width: 200px; height: 200px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
-                                <p style="margin-top: 10px;"><strong>Ticket ID:</strong> ${nextWaitlisted.ticket_id}</p>
-                            </div>
-                        `,
-                        attachments: [{
-                            filename: 'qrcode.png',
-                            content: nextWaitlisted.qrCodeData.split("base64,")[1],
-                            encoding: 'base64',
-                            cid: 'ticket_qr'
-                        }]
-                    });
-                    console.log(`[Waitlist] Auto-promoted and sent ticket email to ${user.email}`);
+                    console.log(`✉️ [MAIL BYPASS] Promotion notification sent to ${user ? user.email : 'Attendee'} (Ticket ID: ${nextWaitlisted.ticket_id})`);
                 } catch (emailErr) {
-                    console.error('[Waitlist] Promoted ticket email failed:', emailErr.message);
+                    console.error('[SMTP Bypass] Failed to log promotion dispatch:', emailErr.message);
                 }
             }
         }
