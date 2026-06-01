@@ -5,6 +5,7 @@ const registrationSchema = new mongoose.Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     ticket_id: { type: String, required: true, unique: true },
     qrCodeData: { type: String, required: true },
+    status: { type: String, enum: ['registered', 'waitlisted'], default: 'registered' },
     attendance_status: { type: Boolean, default: false },
     checkin_time: { type: Date }
 }, { timestamps: true });

@@ -37,6 +37,12 @@ window.renderEvents = async function(appDiv) {
                 <button onclick="registerEvent('${e._id}')" class="btn btn-primary btn-block" style="margin-top:1rem;">Register Now (QR Ticket)</button>
                 ${detailsHtml}
                 ${deleteBtn}
+                <div style="margin-top:0.8rem; border-top:1px solid var(--surface-border); padding-top:0.8rem;">
+                    <a href="#" onclick="toggleEventReviews(event, '${e._id}')" style="font-size:0.85rem; font-weight:600;"><i class="fa-regular fa-comment-dots"></i> Student Reviews</a>
+                    <div id="reviews-viewer-${e._id}" style="display:none; margin-top:0.8rem; text-align:left; background:rgba(0,0,0,0.15); padding:1rem; border-radius:12px; border:1px solid var(--surface-border); max-height:200px; overflow-y:auto;">
+                        <div class="loader-small" style="font-size:0.8rem; color:var(--text-secondary); text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Checking reviews...</div>
+                    </div>
+                </div>
             </div>
         `}).join('');
         document.getElementById('eventsList').innerHTML = evHtml;
@@ -171,7 +177,39 @@ window.renderEditEvent = async function(appDiv) {
                 window.location.hash = '#/events';
             } catch(err) { showToast(err.message, 'error'); }
        });
-   } catch(err) {
-       appDiv.innerHTML = `<div class="container section"><p style="color:red; text-align:center;">${err.message}</p></div>`;
-   }
+    } catch(err) {
+        appDiv.innerHTML = `<div class="container section"><p style="color:red; text-align:center;">${err.message}</p></div>`;
+    }
+}
+
+window.toggleEventReviews = async function(e, eventId) {
+    e.preventDefault();
+    const viewer = document.getElementById(`reviews-viewer-${eventId}`);
+    if (viewer.style.display === 'block') {
+        viewer.style.display = 'none';
+        return;
+    }
+    
+    viewer.style.display = 'block';
+    try {
+        const reviews = await apiCall(`/events/${eventId}/feedback`);
+        if (reviews.length === 0) {
+            viewer.innerHTML = `<p style="font-size:0.8rem; color:var(--text-secondary); margin:0; text-align:center;">No reviews posted yet.</p>`;
+            return;
+        }
+
+        viewer.innerHTML = reviews.map(r => `
+            <div style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.6rem; margin-bottom:0.6rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
+                    <strong style="font-size:0.85rem; color:var(--text-primary);">${r.user_id ? r.user_id.name : 'Attendee'}</strong>
+                    <span style="color:#f59e0b; font-size:0.8rem;">
+                        ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}
+                    </span>
+                </div>
+                <p style="font-size:0.8rem; color:var(--text-secondary); margin:0; line-height:1.4;">${r.comment}</p>
+            </div>
+        `).join('');
+    } catch(err) {
+        viewer.innerHTML = `<p style="font-size:0.8rem; color:#ef4444; margin:0;">Failed to load reviews.</p>`;
+    }
 }

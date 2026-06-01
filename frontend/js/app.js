@@ -2,6 +2,8 @@ const routes = {
     '/': renderHome,
     '/login': renderLogin,
     '/signup': renderSignup,
+    '/forgot-password': renderForgotPassword,
+    '/reset-password': renderResetPassword,
     '/events': renderEvents,
     '/calendar': renderCalendar,
     '/dashboard': renderDashboard,
