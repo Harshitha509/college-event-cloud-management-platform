@@ -2,6 +2,15 @@ window.renderEvents = async function(appDiv) {
     appDiv.innerHTML = '<div class="container section"><h2>Upcoming Events (Real-Time)</h2><div id="eventsList" class="grid-container"><div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> Checking cloud...</div></div></div>';
     try {
         const events = await apiCall('/events');
+        
+        // Fetch current user registrations if logged in
+        let myRegs = [];
+        if (state.token) {
+            try {
+                myRegs = await apiCall('/events/my-registrations');
+            } catch(e) { console.error('Failed to fetch user registrations for UI labels', e); }
+        }
+
         if (events.length === 0) {
             document.getElementById('eventsList').innerHTML = '<p>No events found. Check back later!</p>';
             return;
@@ -27,14 +36,48 @@ window.renderEvents = async function(appDiv) {
                 }
             }
 
+            // Enforce visual registration button checking
+            let regBtn = '';
+            const userClaim = myRegs.find(r => r.event_id && (r.event_id._id === e._id || r.event_id === e._id));
+            
+            if (userClaim) {
+                if (userClaim.status === 'waitlisted') {
+                    regBtn = `<button onclick="window.location.hash='#/dashboard'" class="btn btn-secondary btn-block" style="margin-top:1rem; color:#f59e0b; border-color:rgba(245,158,11,0.3);"><i class="fa-solid fa-hourglass-half"></i> Waitlisted (Queue)</button>`;
+                } else {
+                    regBtn = `<button onclick="window.location.hash='#/dashboard'" class="btn btn-secondary btn-block" style="margin-top:1rem; color:#10b981; border-color:rgba(16,185,129,0.3);"><i class="fa-solid fa-circle-check"></i> Registered (View Ticket)</button>`;
+                }
+            } else {
+                const cap = e.capacity || 0;
+                const regCount = e.registeredCount || 0;
+                const isFull = cap > 0 && regCount >= cap;
+                
+                if (isFull) {
+                    regBtn = `<button onclick="registerEvent('${e._id}')" class="btn btn-secondary btn-block" style="margin-top:1rem; color:#f59e0b; border-color:rgba(245,158,11,0.3);"><i class="fa-solid fa-plus"></i> Join Waitlist (Event Full)</button>`;
+                } else {
+                    regBtn = `<button onclick="registerEvent('${e._id}')" class="btn btn-primary btn-block" style="margin-top:1rem;"><i class="fa-solid fa-ticket"></i> Register Now (QR Ticket)</button>`;
+                }
+            }
+
+            // Seats remaining counter text
+            let seatsText = '';
+            if (e.capacity) {
+                const remains = Math.max(0, e.capacity - (e.registeredCount || 0));
+                if (remains === 0) {
+                    seatsText = `<p style="font-size:0.85rem; color:#f59e0b; font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Waitlist active (Event full)</p>`;
+                } else {
+                    seatsText = `<p style="font-size:0.85rem; color:#10b981; font-weight:600;"><i class="fa-solid fa-chair"></i> ${remains} seats remaining (Capacity: ${e.capacity})</p>`;
+                }
+            }
+
             return `
             <div class="card">
                 ${posterHtml}
                 <h3>${e.title}</h3>
                 <p><i class="fa-regular fa-calendar"></i> ${new Date(e.date).toLocaleDateString()}</p>
                 <p><i class="fa-solid fa-location-dot"></i> ${e.venue}</p>
-                <p style="font-size:0.9rem; color:var(--text-secondary);">${e.description}</p>
-                <button onclick="registerEvent('${e._id}')" class="btn btn-primary btn-block" style="margin-top:1rem;">Register Now (QR Ticket)</button>
+                ${seatsText}
+                <p style="font-size:0.9rem; color:var(--text-secondary); margin-top:0.5rem;">${e.description}</p>
+                ${regBtn}
                 ${detailsHtml}
                 ${deleteBtn}
                 <div style="margin-top:0.8rem; border-top:1px solid var(--surface-border); padding-top:0.8rem;">

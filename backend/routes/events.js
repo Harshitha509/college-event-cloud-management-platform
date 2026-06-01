@@ -23,7 +23,14 @@ const transporter = nodemailer.createTransport({
 router.get('/', async (req, res) => {
     try {
         const events = await Event.find().populate('organizer_id', 'name');
-        res.json(events);
+        const eventsWithCounts = await Promise.all(events.map(async (e) => {
+            const registeredCount = await Registration.countDocuments({ event_id: e._id, status: 'registered' });
+            return {
+                ...e.toObject(),
+                registeredCount
+            };
+        }));
+        res.json(eventsWithCounts);
     } catch (err) { res.status(500).send('Server error'); }
 });
 
