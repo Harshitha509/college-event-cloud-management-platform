@@ -137,11 +137,11 @@ router.post('/forgot-password', async (req, res) => {
                 `
             });
             console.log(`[SMTP] Dispatched password reset OTP email to ${email}`);
-            res.json({ msg: `Reset code generated! [DIAGNOSTIC DEVELOPER ONLY: Your code is ${otp}]` });
+            res.json({ msg: 'Verification code sent to your email.' });
         } catch (emailErr) {
             console.error('[SMTP] Reset OTP Email Failed:', emailErr.message);
             // Fallback success for local development if mail server has issues
-            res.json({ msg: `Mail server offline. [DIAGNOSTIC DEVELOPER ONLY: Your code is ${otp}]` });
+            res.json({ msg: 'Verification code sent to your email.' });
         }
     } catch (err) {
         console.error(err.message);
