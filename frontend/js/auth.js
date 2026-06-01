@@ -11,8 +11,8 @@ window.renderLogin = async function(appDiv) {
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-block">Sign In</button>
-                <div style="margin-top: 1rem; text-align: center;">
-                    <a href="#/forgot-password" style="font-size: 0.85rem; color: var(--text-secondary);">Forgot Password?</a>
+                <div style="margin-top: 1.2rem; text-align: center;">
+                    <a href="#/forgot-password" style="font-size: 0.95rem; color: var(--secondary-color); font-weight: 600; text-decoration: underline; transition: color 0.3s;">Forgot Password?</a>
                 </div>
                 <p class="text-center" style="margin-top:1.5rem;font-size:0.95rem; color:var(--text-secondary);">
                     Don't have an account? <a href="#/signup" style="font-weight:600;">Sign Up</a>
@@ -459,3 +459,13 @@ window.renderResetPassword = async function(appDiv) {
         }
     });
 }
+
+window.logout = function(e) {
+    if (e) e.preventDefault();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    state.token = null;
+    state.user = null;
+    showToast('Logged out successfully.');
+    window.location.hash = '#/';
+};

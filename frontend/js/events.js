@@ -148,12 +148,20 @@ window.renderCreateEvent = async function(appDiv) {
         e.preventDefault();
         try {
             const formData = new FormData();
-            formData.append('title', e.target.title.value);
-            formData.append('description', e.target.description.value);
-            formData.append('date', e.target.date.value);
-            formData.append('venue', e.target.venue.value);
-            formData.append('poster', e.target.poster.files[0]);
-            if(e.target.detailsFile.files.length > 0) formData.append('detailsFile', e.target.detailsFile.files[0]);
+            formData.append('title', document.getElementById('title').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('date', document.getElementById('date').value);
+            formData.append('venue', document.getElementById('venue').value);
+            
+            const posterInput = document.getElementById('poster');
+            if (posterInput && posterInput.files.length > 0) {
+                formData.append('poster', posterInput.files[0]);
+            }
+            
+            const detailsInput = document.getElementById('detailsFile');
+            if (detailsInput && detailsInput.files.length > 0) {
+                formData.append('detailsFile', detailsInput.files[0]);
+            }
 
             await apiCall('/events', 'POST', formData, true); 
             showToast('Event & Resources successfully uploaded to Cloud Database!');
@@ -209,12 +217,20 @@ window.renderEditEvent = async function(appDiv) {
             e.preventDefault();
             try {
                 const formData = new FormData();
-                formData.append('title', e.target.title.value);
-                formData.append('description', e.target.description.value);
-                formData.append('date', e.target.date.value);
-                formData.append('venue', e.target.venue.value);
-                if(e.target.poster.files.length > 0) formData.append('poster', e.target.poster.files[0]);
-                if(e.target.detailsFile.files.length > 0) formData.append('detailsFile', e.target.detailsFile.files[0]);
+                formData.append('title', document.getElementById('title').value);
+                formData.append('description', document.getElementById('description').value);
+                formData.append('date', document.getElementById('date').value);
+                formData.append('venue', document.getElementById('venue').value);
+                
+                const posterInput = document.getElementById('poster');
+                if (posterInput && posterInput.files.length > 0) {
+                    formData.append('poster', posterInput.files[0]);
+                }
+                
+                const detailsInput = document.getElementById('detailsFile');
+                if (detailsInput && detailsInput.files.length > 0) {
+                    formData.append('detailsFile', detailsInput.files[0]);
+                }
 
                 await apiCall('/events/' + eventId, 'PUT', formData, true);
                 showToast('Event successfully updated!');

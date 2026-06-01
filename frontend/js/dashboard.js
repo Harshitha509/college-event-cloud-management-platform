@@ -81,19 +81,13 @@ async function loadUserTickets() {
             } else {
                 statusBadge = `<span class="badge" style="background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.3); color:#10b981; padding:0.4rem 0.8rem; border-radius:8px; font-size:0.8rem; font-weight:600; display:inline-block; margin-bottom:1rem;"><i class="fa-solid fa-circle-check"></i> Seat Confirmed</span>`;
                 
-                // Add to Calendar Integration
-                const calendarBtn = `<button onclick="downloadCalendarICS('${ev.title}', '${ev.date}', '${ev.venue}', '${ev.description}')" class="btn btn-secondary" style="flex:1; font-size:0.8rem; padding:0.6rem 1rem;"><i class="fa-solid fa-calendar-plus"></i> Add to Calendar</button>`;
-                
                 // Cancellation action
-                const cancelBtn = `<button onclick="cancelClaim('${ev._id}')" class="btn btn-secondary" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.2); font-size:0.8rem; padding:0.6rem 1rem;"><i class="fa-solid fa-trash"></i> Cancel</button>`;
+                const cancelBtn = `<button onclick="cancelClaim('${ev._id}')" class="btn btn-secondary btn-block" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.2); font-size:0.8rem; padding:0.6rem 1rem; margin-top:0;"><i class="fa-solid fa-trash"></i> Cancel Registration</button>`;
 
                 actionButtons = `
                     <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:1rem;">
                         <button onclick="toggleQRTicket('${r.ticket_id}', '${r.qrCodeData}')" class="btn btn-primary btn-block" style="margin-top:0;"><i class="fa-solid fa-qrcode"></i> View QR Ticket</button>
-                        <div style="display:flex; gap:0.5rem; width:100%;">
-                            ${calendarBtn}
-                            ${cancelBtn}
-                        </div>
+                        ${cancelBtn}
                     </div>
                     <!-- QR Modal container -->
                     <div id="qr-container-${r.ticket_id}" style="display:none; text-align:center; padding:1.5rem; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:16px; margin-top:1rem;">
@@ -166,47 +160,7 @@ window.cancelClaim = async function(eventId) {
     }
 }
 
-// Calendar Export (Download .ics)
-window.downloadCalendarICS = function(eventTitle, eventDate, eventVenue, eventDescription) {
-    try {
-        const date = new Date(eventDate);
-        const formatDate = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
-        const startDate = formatDate(date);
-        const endDate = formatDate(new Date(date.getTime() + 2 * 60 * 60 * 1000)); // 2 hours default
-        
-        const cleanDesc = eventDescription ? eventDescription.replace(/\r?\n/g, "\\n") : 'BMS College Event';
 
-        const icsContent = [
-            "BEGIN:VCALENDAR",
-            "VERSION:2.0",
-            "METHOD:PUBLISH",
-            "PRODID:-//EventCloud//Campus Event Planner//EN",
-            "BEGIN:VEVENT",
-            `UID:${Math.random().toString(36).substr(2, 9)}@eventcloud.com`,
-            `DTSTAMP:${formatDate(new Date())}`,
-            `DTSTART:${startDate}`,
-            `DTEND:${endDate}`,
-            `SUMMARY:${eventTitle.replace(/[,;]/g, "\\$&")}`,
-            `DESCRIPTION:${cleanDesc.replace(/[,;]/g, "\\$&")}`,
-            `LOCATION:${eventVenue.replace(/[,;]/g, "\\$&")}`,
-            "STATUS:CONFIRMED",
-            "SEQUENCE:0",
-            "END:VEVENT",
-            "END:VCALENDAR"
-        ].join("\r\n");
-
-        const blob = new Blob([icsContent], { type: "text/calendar" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `${eventTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.ics`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showToast("Calendar schedule file downloaded successfully.");
-    } catch (err) {
-        showToast("Failed to compile calendar download.", 'error');
-    }
-}
 
 // Feedback controls
 window.toggleFeedbackPanel = function(eventId) {
