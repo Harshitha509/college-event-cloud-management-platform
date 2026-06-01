@@ -4,6 +4,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
+const nodemailer = require('nodemailer');
+
+// Configure Email Transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: process.env.EMAIL_USER || 'system@yourdomain.com', pass: process.env.EMAIL_PASS || 'secret' }
+});
 
 
 // POST /api/auth/register
@@ -109,9 +116,33 @@ router.post('/forgot-password', async (req, res) => {
         });
         await newOtp.save();
 
-        // Print reset code to console and return success
+        // Print reset code to console
         console.log(`🔑 [OTP SYSTEM] Password reset code for ${email} is: ${otp}`);
-        res.json({ msg: `Reset code generated! [DIAGNOSTIC DEVELOPER ONLY: Your code is ${otp}]` });
+
+        // Dispatch Email with 6-digit OTP
+        try {
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'EventCloud Password Reset Code',
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
+                        <h2 style="color: #a855f7; text-align: center;">Reset Your Password</h2>
+                        <p>We received a request to reset the password for your EventCloud account. Enter the 6-digit verification code below on the recovery page:</p>
+                        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; text-align: center; margin: 1.5rem 0;">
+                            <span style="font-size: 2.2rem; font-weight: 700; letter-spacing: 6px; color: #a855f7;">${otp}</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #64748b; text-align: center;">This code will expire in 10 minutes. If you did not request this code, you can safely ignore this email.</p>
+                    </div>
+                `
+            });
+            console.log(`[SMTP] Dispatched password reset OTP email to ${email}`);
+            res.json({ msg: `Reset code generated! [DIAGNOSTIC DEVELOPER ONLY: Your code is ${otp}]` });
+        } catch (emailErr) {
+            console.error('[SMTP] Reset OTP Email Failed:', emailErr.message);
+            // Fallback success for local development if mail server has issues
+            res.json({ msg: `Mail server offline. [DIAGNOSTIC DEVELOPER ONLY: Your code is ${otp}]` });
+        }
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
@@ -127,6 +158,12 @@ router.post('/reset-password', async (req, res) => {
         const otpRecord = await OTP.findOne({ email, otp });
         if (!otpRecord) {
             return res.status(400).json({ msg: 'Invalid or expired verification code.' });
+        }
+
+        // Clock-skew safe application-level 10-minute expiry check
+        if (otpRecord.expiresAt < new Date()) {
+            await OTP.deleteOne({ email });
+            return res.status(400).json({ msg: 'Verification code has expired. Please request a new one.' });
         }
 
         // Strict password validation
