@@ -1,12 +1,13 @@
 // --- Global State & Configuration ---
-const API_URL = 'https://smart-event-api.onrender.com/api'; 
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_URL = isLocal ? 'http://localhost:5000/api' : 'https://smart-event-api.onrender.com/api'; 
 const state = {
     token: localStorage.getItem('token') || null,
     user: JSON.parse(localStorage.getItem('user')) || null,
 };
 
 // --- WebSockets Initialization ---
-const socket = io('https://smart-event-api.onrender.com');
+const socket = io(isLocal ? 'http://localhost:5000' : 'https://smart-event-api.onrender.com');
 
 socket.on('newEvent', (data) => {
     if(window.location.hash === '#/events') router();
