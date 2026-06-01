@@ -179,20 +179,23 @@ window.downloadCalendarICS = function(eventTitle, eventDate, eventVenue, eventDe
         const icsContent = [
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
+            "METHOD:PUBLISH",
             "PRODID:-//EventCloud//Campus Event Planner//EN",
             "BEGIN:VEVENT",
             `UID:${Math.random().toString(36).substr(2, 9)}@eventcloud.com`,
             `DTSTAMP:${formatDate(new Date())}`,
             `DTSTART:${startDate}`,
             `DTEND:${endDate}`,
-            `SUMMARY:${eventTitle}`,
-            `DESCRIPTION:${cleanDesc}`,
-            `LOCATION:${eventVenue}`,
+            `SUMMARY:${eventTitle.replace(/[,;]/g, "\\$&")}`,
+            `DESCRIPTION:${cleanDesc.replace(/[,;]/g, "\\$&")}`,
+            `LOCATION:${eventVenue.replace(/[,;]/g, "\\$&")}`,
+            "STATUS:CONFIRMED",
+            "SEQUENCE:0",
             "END:VEVENT",
             "END:VCALENDAR"
         ].join("\r\n");
 
-        const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+        const blob = new Blob([icsContent], { type: "text/calendar" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = `${eventTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.ics`;

@@ -6,6 +6,7 @@ const eventSchema = new mongoose.Schema({
     date: { type: Date, required: true },
     venue: { type: String, required: true },
     organizer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    capacity: { type: Number, default: 0 },
     imageUrl: { type: String }, // Now storing Base64 directly
     detailsFileUrl: { type: String }, // Base64 for optional PDF/Doc
     detailsFileName: { type: String } // Original file name

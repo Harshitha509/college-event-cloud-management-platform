@@ -103,6 +103,7 @@ window.registerEvent = async function (id) {
     try {
         const data = await apiCall(`/events/${id}/register`, 'POST');
         showToast('Registered Successfully! Email has been sent.');
+        router(); // Instantly update dynamic state and button labels
     } catch(err) { showToast(err.message, 'error'); }
 }
 
