@@ -1,4 +1,5 @@
 require('dotenv').config();
+console.log("Loaded EMAIL_USER:", process.env.EMAIL_USER);
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -24,6 +25,10 @@ io.on('connection', (socket) => {
 });
 
 // Middleware
+app.use((req, res, next) => {
+    console.log(`📡 [API Request] ${req.method} ${req.originalUrl}`);
+    next();
+});
 app.use(cors());
 app.use(express.json());
 // Serve local files as static cloud storage mock

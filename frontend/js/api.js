@@ -1,22 +1,40 @@
 // --- Global State & Configuration ---
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_URL = isLocal ? 'http://localhost:5000/api' : 'https://smart-event-api.onrender.com/api'; 
+const isLocal = window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' || 
+                window.location.hostname === '' || 
+                window.location.protocol === 'file:' || 
+                window.location.hostname.startsWith('192.168.') || 
+                window.location.hostname.startsWith('10.') || 
+                window.location.hostname.includes('.local');
+
+const API_URL = isLocal ? `http://${window.location.hostname || 'localhost'}:5000/api` : 'https://smart-event-api.onrender.com/api'; 
 const state = {
     token: localStorage.getItem('token') || null,
     user: JSON.parse(localStorage.getItem('user')) || null,
 };
 
 // --- WebSockets Initialization ---
-const socket = io(isLocal ? 'http://localhost:5000' : 'https://smart-event-api.onrender.com');
+const socket = io(isLocal ? `http://${window.location.hostname || 'localhost'}:5000` : 'https://smart-event-api.onrender.com');
 
 socket.on('newEvent', (data) => {
-    if(window.location.hash === '#/events') router();
+    if(window.location.hash === '#/events') {
+        if (typeof window.router === 'function') window.router();
+    }
 });
 socket.on('eventDeleted', (id) => {
-    if(window.location.hash === '#/events' || window.location.hash === '#/calendar') router();
+    if(window.location.hash === '#/events' || window.location.hash === '#/calendar') {
+        if (typeof window.router === 'function') window.router();
+    }
 });
 socket.on('attendanceUpdate', (data) => {
-    if(window.location.hash === '#/admin') router();
+    if(window.location.hash === '#/admin') {
+        if (typeof window.router === 'function') window.router();
+    }
+});
+socket.on('newRegistration', (data) => {
+    if(window.location.hash === '#/events' || window.location.hash === '#/dashboard' || window.location.hash === '#/admin') {
+        if (typeof window.router === 'function') window.router();
+    }
 });
 
 // --- Global Toast Helper ---

@@ -103,7 +103,7 @@ window.registerEvent = async function (id) {
     try {
         const data = await apiCall(`/events/${id}/register`, 'POST');
         showToast('Registered Successfully! Email has been sent.');
-        router(); // Instantly update dynamic state and button labels
+        window.router(); // Instantly update dynamic state and button labels
     } catch(err) { showToast(err.message, 'error'); }
 }
 
@@ -112,7 +112,7 @@ window.deleteEvent = async function (id) {
     try {
         const res = await apiCall(`/events/${id}`, 'DELETE');
         showToast(res.msg || 'Event deleted successfully.');
-        router();
+        window.router();
     } catch(err) { showToast(err.message, 'error'); }
 }
 

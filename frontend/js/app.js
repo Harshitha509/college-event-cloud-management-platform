@@ -24,6 +24,7 @@ function router() {
     else appDiv.innerHTML = '<div class="container section text-center"><h2>404 - Page Not Found</h2></div>';
 }
 
+window.router = router;
 window.addEventListener('hashchange', router);
 window.addEventListener('DOMContentLoaded', router);
 
