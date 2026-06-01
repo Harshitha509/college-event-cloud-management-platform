@@ -1,5 +1,5 @@
 window.renderEvents = async function(appDiv) {
-    appDiv.innerHTML = '<div class="container section"><h2>Upcoming Events (Real-Time)</h2><div id="eventsList" class="grid-container"><div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> Checking cloud...</div></div></div>';
+    appDiv.innerHTML = '<div class="container section"><h2>Events</h2><div id="eventsList" class="grid-container"><div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> Checking cloud...</div></div></div>';
     try {
         const events = await apiCall('/events');
         
